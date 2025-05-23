@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>드림프라자 제301호 주차장 – 모두의주차장 연계 예약 페이지</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#3b82f6',secondary:'#60a5fa'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .time-slot {
+            transition: all 0.3s ease;
+        }
+        .time-slot:hover:not(.disabled) {
+            transform: translateY(-2px);
+        }
+        .time-slot.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .custom-checkbox {
+            position: relative;
+            padding-left: 28px;
+            cursor: pointer;
+        }
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+        }
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+        .custom-checkbox input:checked ~ .checkmark:after {
+            display: block;
+        }
+        .custom-checkbox .checkmark:after {
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .custom-radio {
+            position: relative;
+            padding-left: 28px;
+            cursor: pointer;
+        }
+        .custom-radio input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .radiomark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+        }
+        .custom-radio input:checked ~ .radiomark {
+            background-color: #fff;
+            border-color: #3b82f6;
+        }
+        .radiomark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+        .custom-radio input:checked ~ .radiomark:after {
+            display: block;
+        }
+        .custom-radio .radiomark:after {
+            top: 4px;
+            left: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3b82f6;
+        }
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e5e7eb;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #3b82f6;
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        .custom-select {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        .custom-select select {
+            display: none;
+        }
+        .select-selected {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+        .select-selected:after {
+            position: absolute;
+            content: "";
+            top: 50%;
+            right: 16px;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border: 6px solid transparent;
+            border-color: #888 transparent transparent transparent;
+        }
+        .select-selected.select-arrow-active:after {
+            border-color: transparent transparent #888 transparent;
+            top: 40%;
+        }
+        .select-items {
+            position: absolute;
+            background-color: white;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 99;
+            border: 1px solid #e5e7eb;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .select-items div {
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+        .select-items div:hover {
+            background-color: #f3f4f6;
+        }
+        .select-hide {
+            display: none;
+        }
+        .same-as-selected {
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mr-3">
+                        <i class="ri-parking-line text-white ri-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">드림프라자 제301호 주차장</h1>
+                        <p class="text-gray-500 text-sm">모두의주차장 연계 예약 페이지</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-blue-50 px-3 py-1 rounded-full flex items-center">
+                        <div class="w-6 h-6 flex items-center justify-center">
+                            <i class="ri-time-line text-primary"></i>
+                        </div>
+                        <span class="text-sm font-medium text-primary ml-1">24시간 운영</span>
+                    </div>
+                    <div class="bg-blue-50 px-3 py-1 rounded-full flex items-center">
+                        <div class="w-6 h-6 flex items-center justify-center">
+                            <i class="ri-car-line text-primary"></i>
+                        </div>
+                        <span class="text-sm font-medium text-primary ml-1">잔여 <span id="available-spots">2</span>면</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto">
+            <div class="overflow-x-auto">
+                <div class="flex min-w-full">
+                    <button class="tab-button whitespace-nowrap flex-1 py-4 px-6 text-center font-medium text-primary border-b-2 border-primary" data-tab="intro">주차장 소개</button>
+                    <button class="tab-button whitespace-nowrap flex-1 py-4 px-6 text-center font-medium text-gray-500 border-b-2 border-transparent" data-tab="hourly">시간 주차 예약</button>
+                    <button class="tab-button whitespace-nowrap flex-1 py-4 px-6 text-center font-medium text-gray-500 border-b-2 border-transparent" data-tab="monthly">정기 주차 신청</button>
+                    <button class="tab-button whitespace-nowrap flex-1 py-4 px-6 text-center font-medium text-gray-500 border-b-2 border-transparent" data-tab="certificate">차고지 증명 신청</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- 주차장 소개 탭 -->
+        <section id="intro" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">주차장 정보</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 flex items-center justify-center mr-3 mt-0.5">
+                                <i class="ri-map-pin-line text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">주소</h3>
+                                <p class="text-gray-600">서울특별시 강남구 테헤란로 123 드림프라자 B2층 301호</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 flex items-center justify-center mr-3 mt-0.5">
+                                <i class="ri-car-line text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">주차 가능 대수</h3>
+                                <p class="text-gray-600">총 3면 (소형 2면, 중형 1면)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 flex items-center justify-center mr-3 mt-0.5">
+                                <i class="ri-time-line text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">운영 시간</h3>
+                                <p class="text-gray-600">24시간 연중무휴</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 flex items-center justify-center mr-3 mt-0.5">
+                                <i class="ri-money-dollar-circle-line text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">요금 정보</h3>
+                                <div class="mt-2 border rounded-lg overflow-hidden">
+                                    <table class="w-full text-sm">
+                                        <thead>
+                                            <tr class="bg-gray-50">
+                                                <th class="px-4 py-2 text-left font-medium text-gray-700">구분</th>
+                                                <th class="px-4 py-2 text-right font-medium text-gray-700">요금</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="border-t">
+                                                <td class="px-4 py-2 text-gray-600">기본 30분</td>
+                                                <td class="px-4 py-2 text-right text-gray-900 font-medium">2,000원</td>
+                                            </tr>
+                                            <tr class="border-t">
+                                                <td class="px-4 py-2 text-gray-600">추가 10분당</td>
+                                                <td class="px-4 py-2 text-right text-gray-900 font-medium">1,000원</td>
+                                            </tr>
+                                            <tr class="border-t">
+                                                <td class="px-4 py-2 text-gray-600">일일 최대 요금</td>
+                                                <td class="px-4 py-2 text-right text-gray-900 font-medium">30,000원</td>
+                                            </tr>
+                                            <tr class="border-t">
+                                                <td class="px-4 py-2 text-gray-600">월 정기권</td>
+                                                <td class="px-4 py-2 text-right text-gray-900 font-medium">160,000원</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="h-[400px] w-full" style="background-image: url('https://public.readdy.ai/gen_page/map_placeholder_1280x720.png'); background-size: cover; background-position: center;"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">주차장 도면</h2>
+                <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3">
+                            <i class="ri-information-line text-primary"></i>
+                        </div>
+                        <p class="text-sm text-gray-700">입구에서 들어오시면 우측에 301-1, 301-2, 301-3 주차면이 있습니다. 지정된 주차면에만 주차해 주세요.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-100 rounded-lg overflow-hidden relative">
+                        <img src="https://readdy.ai/api/search-image?query=parking%20garage%20layout%20diagram%20with%20numbered%20parking%20spaces%2C%20clean%20modern%20design%2C%20top%20view%2C%20blueprint%20style%2C%20clear%20markings&width=400&height=300&seq=1&orientation=landscape" alt="주차장 도면" class="w-full h-48 object-cover object-top">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                            <p class="text-white font-medium">주차장 입구</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg overflow-hidden relative">
+                        <img src="https://readdy.ai/api/search-image?query=parking%20garage%20layout%20diagram%20with%20numbered%20parking%20spaces%20301-1%2C%20301-2%2C%20301-3%2C%20clean%20modern%20design%2C%20top%20view%2C%20blueprint%20style%2C%20clear%20markings&width=400&height=300&seq=2&orientation=landscape" alt="주차면 번호" class="w-full h-48 object-cover object-top">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                            <p class="text-white font-medium">주차면 번호 (301-1~3)</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg overflow-hidden relative">
+                        <img src="https://readdy.ai/api/search-image?query=parking%20garage%20layout%20with%20directional%20arrows%20and%20exit%20signs%2C%20clean%20modern%20design%2C%20top%20view%2C%20blueprint%20style%2C%20clear%20markings&width=400&height=300&seq=3&orientation=landscape" alt="출구 안내" class="w-full h-48 object-cover object-top">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                            <p class="text-white font-medium">출구 안내</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">현장 사진</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-gray-100 rounded-lg overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=indoor%20parking%20garage%20entrance%2C%20modern%2C%20clean%2C%20well-lit%2C%20concrete%20floor%2C%20white%20walls%2C%20clear%20signage%2C%20realistic%20photo&width=300&height=200&seq=4&orientation=landscape" alt="주차장 입구" class="w-full h-40 object-cover object-top">
+                        <div class="p-3">
+                            <p class="text-gray-900 font-medium">주차장 입구</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=indoor%20parking%20spaces%20with%20clear%20number%20markings%20on%20floor%2C%20modern%20garage%2C%20clean%2C%20well-lit%2C%20concrete%20floor%2C%20white%20walls%2C%20realistic%20photo&width=300&height=200&seq=5&orientation=landscape" alt="주차면 표시" class="w-full h-40 object-cover object-top">
+                        <div class="p-3">
+                            <p class="text-gray-900 font-medium">주차면 표시</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=indoor%20parking%20garage%20payment%20kiosk%2C%20modern%2C%20digital%20display%2C%20clean%2C%20well-lit%2C%20concrete%20floor%2C%20white%20walls%2C%20realistic%20photo&width=300&height=200&seq=6&orientation=landscape" alt="정산기" class="w-full h-40 object-cover object-top">
+                        <div class="p-3">
+                            <p class="text-gray-900 font-medium">정산기</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=indoor%20parking%20garage%20exit%20with%20clear%20signage%2C%20modern%2C%20clean%2C%20well-lit%2C%20concrete%20floor%2C%20white%20walls%2C%20realistic%20photo&width=300&height=200&seq=7&orientation=landscape" alt="출구" class="w-full h-40 object-cover object-top">
+                        <div class="p-3">
+                            <p class="text-gray-900 font-medium">출구</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 시간 주차 예약 탭 -->
+        <section id="hourly" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-3 md:mb-0">시간 주차 예약</h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-blue-50 px-4 py-2 rounded-lg flex items-center">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <i class="ri-car-line text-primary"></i>
+                            </div>
+                            <span class="text-sm font-medium text-primary ml-2">현재 잔여: <span id="hourly-available-spots" class="font-bold">2</span>면</span>
+                        </div>
+                        <div class="relative">
+                            <input type="date" id="reservation-date" class="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" value="2025-05-23">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center">
+                                <i class="ri-calendar-line text-gray-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3">
+                            <i class="ri-information-line text-primary"></i>
+                        </div>
+                        <p class="text-sm text-gray-700">예약은 30분 단위로 가능하며, 예약 시간 10분 전부터 입차 가능합니다. 예약 완료 후 발급되는 QR코드를 입구에서 스캔해 주세요.</p>
+                    </div>
+                </div>
+
+                <div class="border rounded-lg overflow-hidden mb-6">
+                    <div class="grid grid-cols-4 bg-gray-50 border-b">
+                        <div class="px-4 py-3 font-medium text-gray-700 text-center">시간</div>
+                        <div class="px-4 py-3 font-medium text-gray-700 text-center">301-1</div>
+                        <div class="px-4 py-3 font-medium text-gray-700 text-center">301-2</div>
+                        <div class="px-4 py-3 font-medium text-gray-700 text-center">301-3</div>
+                    </div>
+                    <div class="divide-y" id="time-slots-container">
+                        <!-- 시간대별 슬롯은 JS로 생성됩니다 -->
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center space-x-2 text-sm text-gray-600">
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-green-100 border border-green-300 rounded mr-1"></div>
+                        <span>예약 가능</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-primary/20 border border-primary/30 rounded mr-1"></div>
+                        <span>선택됨</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-gray-200 border border-gray-300 rounded mr-1"></div>
+                        <span>예약 불가</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reservation-summary" class="bg-white rounded-lg shadow-sm p-6 hidden">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">예약 정보 확인</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="space-y-4 mb-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 flex items-center justify-center mr-3 mt-0.5">
+                                    <i class="ri-calendar-check-line text-primary"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900">예약 일시</h3>
+                                    <p class="text-gray-600" id="summary-datetime">2025-05-23 14:00 ~ 15:00</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 flex items-center justify-center mr-3 mt-0.5">
+                                    <i class="ri-parking-box-line text-primary"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900">주차면 번호</h3>
+                                    <p class="text-gray-600" id="summary-spot">301-2</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 flex items-center justify-center mr-3 mt-0.5">
+                                    <i class="ri-money-dollar-circle-line text-primary"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900">예상 요금</h3>
+                                    <p class="text-gray-600" id="summary-fee">4,000원</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label for="reservation-name" class="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                                <input type="text" id="reservation-name" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                            </div>
+                            <div>
+                                <label for="reservation-phone" class="block text-sm font-medium text-gray-700 mb-1">연락처</label>
+                                <input type="text" id="reservation-phone" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="010-0000-0000">
+                            </div>
+                            <div>
+                                <label for="reservation-car-number" class="block text-sm font-medium text-gray-700 mb-1">차량번호</label>
+                                <input type="text" id="reservation-car-number" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="12가 3456">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="font-medium text-gray-900 mb-4">결제 방법 선택</h3>
+                        <div class="space-y-3 mb-6">
+                            <label class="custom-radio flex items-center">
+                                <input type="radio" name="payment-method" checked>
+                                <span class="radiomark"></span>
+                                <div class="flex items-center ml-2">
+                                    <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                        <i class="ri-bank-card-line text-gray-600"></i>
+                                    </div>
+                                    <span>신용/체크카드</span>
+                                </div>
+                            </label>
+                            <label class="custom-radio flex items-center">
+                                <input type="radio" name="payment-method">
+                                <span class="radiomark"></span>
+                                <div class="flex items-center ml-2">
+                                    <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                        <i class="ri-kakao-talk-fill text-gray-600"></i>
+                                    </div>
+                                    <span>카카오페이</span>
+                                </div>
+                            </label>
+                            <label class="custom-radio flex items-center">
+                                <input type="radio" name="payment-method">
+                                <span class="radiomark"></span>
+                                <div class="flex items-center ml-2">
+                                    <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                        <i class="ri-smartphone-line text-gray-600"></i>
+                                    </div>
+                                    <span>휴대폰 결제</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="mb-6">
+                            <label class="custom-checkbox flex items-center">
+                                <input type="checkbox" id="terms-check">
+                                <span class="checkmark"></span>
+                                <span class="text-sm text-gray-700">이용약관 및 개인정보 처리방침에 동의합니다.</span>
+                            </label>
+                        </div>
+                        <div class="flex flex-col space-y-3">
+                            <button id="complete-reservation" class="w-full py-3 bg-primary text-white font-medium rounded-button flex items-center justify-center whitespace-nowrap">
+                                <i class="ri-check-line mr-2"></i>
+                                예약 완료하기
+                            </button>
+                            <button id="cancel-reservation" class="w-full py-3 bg-gray-200 text-gray-700 font-medium rounded-button flex items-center justify-center whitespace-nowrap">
+                                <i class="ri-close-line mr-2"></i>
+                                취소하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reservation-complete" class="bg-white rounded-lg shadow-sm p-6 hidden">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-check-line text-green-500 ri-2x"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900">예약이 완료되었습니다!</h2>
+                    <p class="text-gray-600 mt-2">아래 QR코드를 주차장 입구에서 스캔해 주세요.</p>
+                </div>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
+                    <div class="bg-gray-50 p-6 rounded-lg text-center">
+                        <div class="mx-auto w-48 h-48 bg-white p-3 rounded-lg shadow-sm mb-4">
+                            <img src="https://readdy.ai/api/search-image?query=QR%20code%20on%20white%20background%2C%20clear%20and%20scannable&width=200&height=200&seq=8&orientation=squarish" alt="QR 코드" class="w-full h-full object-cover">
+                        </div>
+                        <p class="text-sm text-gray-500">예약번호: <span class="font-medium text-gray-900">DP301-230525-1420</span></p>
+                    </div>
+
+                    <div class="space-y-4 w-full max-w-md">
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-3 font-medium text-gray-700">예약 정보</div>
+                            <div class="divide-y">
+                                <div class="px-4 py-3 flex justify-between">
+                                    <span class="text-gray-600">예약 일시</span>
+                                    <span class="font-medium text-gray-900" id="complete-datetime">2025-05-23 14:00 ~ 15:00</span>
+                                </div>
+                                <div class="px-4 py-3 flex justify-between">
+                                    <span class="text-gray-600">주차면 번호</span>
+                                    <span class="font-medium text-gray-900" id="complete-spot">301-2</span>
+                                </div>
+                                <div class="px-4 py-3 flex justify-between">
+                                    <span class="text-gray-600">차량번호</span>
+                                    <span class="font-medium text-gray-900" id="complete-car-number">12가 3456</span>
+                                </div>
+                                <div class="px-4 py-3 flex justify-between">
+                                    <span class="text-gray-600">결제 금액</span>
+                                    <span class="font-medium text-gray-900" id="complete-fee">4,000원</span>
+                                </div>
+                                <div class="px-4 py-3 flex justify-between">
+                                    <span class="text-gray-600">결제 방법</span>
+                                    <span class="font-medium text-gray-900" id="complete-payment">신용/체크카드</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <div class="w-6 h-6 flex items-center justify-center mr-2 mt-0.5">
+                                    <i class="ri-information-line text-primary"></i>
+                                </div>
+                                <div class="text-sm text-gray-700">
+                                    <p class="mb-1">예약 정보가 이메일과 문자로 발송되었습니다.</p>
+                                    <p>예약 변경 및 취소는 예약 시작 1시간 전까지 가능합니다.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-3">
+                            <button id="send-again" class="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-button flex items-center justify-center whitespace-nowrap">
+                                <i class="ri-mail-line mr-2"></i>
+                                정보 다시 받기
+                            </button>
+                            <button id="new-reservation" class="flex-1 py-3 bg-primary text-white font-medium rounded-button flex items-center justify-center whitespace-nowrap">
+                                <i class="ri-add-line mr-2"></i>
+                                새 예약하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 정기 주차 신청 탭 -->
+        <section id="monthly" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">정기 주차 신청</h2>
+                <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3">
+                            <i class="ri-information-line text-primary"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-700 mb-1">정기권은 매월 1일부터 말일까지 이용 가능하며, 월 중간 신청 시 일할 계산됩니다.</p>
+                            <p class="text-sm text-gray-700">신청 후 관리자 승인을 거쳐 결제가 진행됩니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                            <i class="ri-calendar-line text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900">월 정기권 요금</h3>
+                            <p class="text-2xl font-bold text-primary">160,000원</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-2 rounded-lg">
+                        <p class="text-sm text-gray-600">현재 정기권 잔여: <span class="font-medium text-gray-900">1</span>면</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-2">
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">신청자 정보</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="monthly-name" class="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                                        <input type="text" id="monthly-name" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                                    </div>
+                                    <div>
+                                        <label for="monthly-phone" class="block text-sm font-medium text-gray-700 mb-1">연락처</label>
+                                        <input type="text" id="monthly-phone" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="010-0000-0000">
+                                    </div>
+                                    <div>
+                                        <label for="monthly-email" class="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+                                        <input type="email" id="monthly-email" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                                    </div>
+                                    <div>
+                                        <label for="monthly-car-number" class="block text-sm font-medium text-gray-700 mb-1">차량번호</label>
+                                        <input type="text" id="monthly-car-number" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="12가 3456">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">이용 기간 선택</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="monthly-start-date" class="block text-sm font-medium text-gray-700 mb-1">시작일</label>
+                                        <div class="relative">
+                                            <input type="date" id="monthly-start-date" class="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" value="2025-06-01">
+                                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center">
+                                                <i class="ri-calendar-line text-gray-500"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="monthly-end-date" class="block text-sm font-medium text-gray-700 mb-1">종료일</label>
+                                        <div class="relative">
+                                            <input type="date" id="monthly-end-date" class="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" value="2025-06-30">
+                                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center">
+                                                <i class="ri-calendar-line text-gray-500"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <div class="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg">
+                                        <span class="text-gray-700">이용 기간</span>
+                                        <span class="font-medium text-gray-900">30일 (1개월)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">추가 요청사항</h3>
+                                <textarea id="monthly-request" rows="3" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="특별한 요청사항이 있으시면 입력해 주세요."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="font-medium text-gray-900 mb-4">신청 정보 확인</h3>
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">월 정기권 요금</span>
+                                <span class="font-medium text-gray-900">160,000원</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">이용 기간</span>
+                                <span class="font-medium text-gray-900">2025-06-01 ~ 2025-06-30</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">총 결제 금액</span>
+                                <span class="font-bold text-primary text-lg">160,000원</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t pt-6 mb-6">
+                            <h4 class="font-medium text-gray-900 mb-3">결제 방법 선택</h4>
+                            <div class="space-y-3">
+                                <label class="custom-radio flex items-center">
+                                    <input type="radio" name="monthly-payment-method" checked>
+                                    <span class="radiomark"></span>
+                                    <div class="flex items-center ml-2">
+                                        <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                            <i class="ri-bank-card-line text-gray-600"></i>
+                                        </div>
+                                        <span>신용/체크카드</span>
+                                    </div>
+                                </label>
+                                <label class="custom-radio flex items-center">
+                                    <input type="radio" name="monthly-payment-method">
+                                    <span class="radiomark"></span>
+                                    <div class="flex items-center ml-2">
+                                        <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                            <i class="ri-bank-line text-gray-600"></i>
+                                        </div>
+                                        <span>계좌이체</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="custom-checkbox flex items-center">
+                                <input type="checkbox" id="monthly-terms-check">
+                                <span class="checkmark"></span>
+                                <span class="text-sm text-gray-700">이용약관 및 개인정보 처리방침에 동의합니다.</span>
+                            </label>
+                        </div>
+
+                        <button id="submit-monthly" class="w-full py-3 bg-primary text-white font-medium rounded-button flex items-center justify-center whitespace-nowrap">
+                            <i class="ri-check-line mr-2"></i>
+                            정기권 신청하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="monthly-complete" class="bg-white rounded-lg shadow-sm p-6 hidden">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-check-line text-green-500 ri-2x"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900">정기권 신청이 완료되었습니다!</h2>
+                    <p class="text-gray-600 mt-2">관리자 승인 후 결제가 진행됩니다.</p>
+                </div>
+
+                <div class="max-w-2xl mx-auto">
+                    <div class="border rounded-lg overflow-hidden mb-6">
+                        <div class="bg-gray-50 px-4 py-3 font-medium text-gray-700">신청 정보</div>
+                        <div class="divide-y">
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">신청 번호</span>
+                                <span class="font-medium text-gray-900">M-DP301-230523-0001</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">이름</span>
+                                <span class="font-medium text-gray-900" id="complete-monthly-name">김민수</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">차량번호</span>
+                                <span class="font-medium text-gray-900" id="complete-monthly-car">12가 3456</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">이용 기간</span>
+                                <span class="font-medium text-gray-900">2025-06-01 ~ 2025-06-30</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">결제 예정 금액</span>
+                                <span class="font-medium text-gray-900">160,000원</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">신청 상태</span>
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">승인 대기중</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                        <div class="flex items-start">
+                            <div class="w-6 h-6 flex items-center justify-center mr-2 mt-0.5">
+                                <i class="ri-information-line text-primary"></i>
+                            </div>
+                            <div class="text-sm text-gray-700">
+                                <p class="mb-1">신청 정보가 이메일과 문자로 발송되었습니다.</p>
+                                <p>관리자 승인 후 결제 안내가 발송될 예정입니다. (보통 1~2일 소요)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button id="back-to-monthly" class="px-6 py-3 bg-primary text-white font-medium rounded-button flex items-center justify-center whitespace-nowrap">
+                            <i class="ri-arrow-left-line mr-2"></i>
+                            돌아가기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 차고지 증명 신청 탭 -->
+        <section id="certificate" class="tab-content">
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">차고지 증명 신청</h2>
+                <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 flex items-center justify-center mr-3">
+                            <i class="ri-information-line text-primary"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-700 mb-1">차고지 증명서는 자동차 등록 및 이전등록 시 필요한 서류입니다.</p>
+                            <p class="text-sm text-gray-700">신청 후 관리자 승인을 거쳐 PDF 파일로 발급됩니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-2">
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">신청 용도</h3>
+                                <div class="custom-select">
+                                    <div class="select-selected">용도를 선택해 주세요</div>
+                                    <div class="select-items select-hide">
+                                        <div>자동차 신규등록</div>
+                                        <div>자동차 이전등록</div>
+                                        <div>주소지 변경</div>
+                                        <div>기타</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">차량 소유자 정보</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="cert-name" class="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                                        <input type="text" id="cert-name" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
+                                    </div>
+                                    <div>
+                                        <label for="cert-phone" class="block text-sm font-medium text-gray-700 mb-1">연락처</label>
+                                        <input type="text" id="cert-phone" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="010-0000-0000">
+                                    </div>
+                                    <div>
+                                        <label for="cert-id-number" class="block text-sm font-medium text-gray-700 mb-1">주민등록번호</label>
+                                        <input type="text" id="cert-id-number" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="000000-0000000">
+                                    </div>
+                                    <div>
+                                        <label for="cert-car-number" class="block text-sm font-medium text-gray-700 mb-1">차량번호</label>
+                                        <input type="text" id="cert-car-number" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="12가 3456">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">주소 정보</h3>
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label for="cert-address" class="block text-sm font-medium text-gray-700 mb-1">주소</label>
+                                        <div class="flex space-x-2">
+                                            <input type="text" id="cert-address-zipcode" class="block w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="우편번호">
+                                            <button class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-button whitespace-nowrap">주소 검색</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input type="text" id="cert-address-1" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="기본 주소">
+                                    </div>
+                                    <div>
+                                        <input type="text" id="cert-address-2" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="상세 주소">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">증명서 발급 정보</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="cert-email" class="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+                                        <input type="email" id="cert-email" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" placeholder="증명서를 받을 이메일">
+                                    </div>
+                                    <div>
+                                        <label for="cert-issue-date" class="block text-sm font-medium text-gray-700 mb-1">발급일자</label>
+                                        <div class="relative">
+                                            <input type="date" id="cert-issue-date" class="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" value="2025-05-23">
+                                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center">
+                                                <i class="ri-calendar-line text-gray-500"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="font-medium text-gray-900 mb-4">신청 정보 확인</h3>
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">증명서 종류</span>
+                                <span class="font-medium text-gray-900">차고지 증명서</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">발급 비용</span>
+                                <span class="font-medium text-gray-900">5,000원</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">처리 기간</span>
+                                <span class="font-medium text-gray-900">1~2일 (영업일 기준)</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t pt-6 mb-6">
+                            <h4 class="font-medium text-gray-900 mb-3">결제 방법 선택</h4>
+                            <div class="space-y-3">
+                                <label class="custom-radio flex items-center">
+                                    <input type="radio" name="cert-payment-method" checked>
+                                    <span class="radiomark"></span>
+                                    <div class="flex items-center ml-2">
+                                        <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                            <i class="ri-bank-card-line text-gray-600"></i>
+                                        </div>
+                                        <span>신용/체크카드</span>
+                                    </div>
+                                </label>
+                                <label class="custom-radio flex items-center">
+                                    <input type="radio" name="cert-payment-method">
+                                    <span class="radiomark"></span>
+                                    <div class="flex items-center ml-2">
+                                        <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                            <i class="ri-kakao-talk-fill text-gray-600"></i>
+                                        </div>
+                                        <span>카카오페이</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="custom-checkbox flex items-center">
+                                <input type="checkbox" id="cert-terms-check">
+                                <span class="checkmark"></span>
+                                <span class="text-sm text-gray-700">이용약관 및 개인정보 처리방침에 동의합니다.</span>
+                            </label>
+                        </div>
+
+                        <button id="submit-certificate" class="w-full py-3 bg-primary text-white font-medium rounded-button flex items-center justify-center whitespace-nowrap">
+                            <i class="ri-check-line mr-2"></i>
+                            증명서 신청하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="certificate-complete" class="bg-white rounded-lg shadow-sm p-6 hidden">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-check-line text-green-500 ri-2x"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900">증명서 신청이 완료되었습니다!</h2>
+                    <p class="text-gray-600 mt-2">관리자 승인 후 이메일로 PDF 파일이 발송됩니다.</p>
+                </div>
+                <div class="max-w-2xl mx-auto">
+                    <div class="border rounded-lg overflow-hidden mb-6">
+                        <div class="bg-gray-50 px-4 py-3 font-medium text-gray-700">신청 정보</div>
+                        <div class="divide-y">
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">신청 번호</span>
+                                <span class="font-medium text-gray-900">C-DP301-230523-0001</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">신청 용도</span>
+                                <span class="font-medium text-gray-900" id="complete-cert-purpose">자동차 신규등록</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">이름</span>
+                                <span class="font-medium text-gray-900" id="complete-cert-name">박지훈</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">차량번호</span>
+                                <span class="font-medium text-gray-900" id="complete-cert-car">34나 5678</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">결제 금액</span>
+                                <span class="font-medium text-gray-900">5,000원</span>
+                            </div>
+                            <div class="px-4 py-3 flex justify-between">
+                                <span class="text-gray-600">신청 상태</span>
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">처리중</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                        <div class="flex items-start">
+                            <div class="w-6 h-6 flex items-center justify-center mr-2 mt-0.5">
+                                <i class="ri-information-line text-primary"></i>
+                            </div>
+                            <div class="text-sm text-gray-700">
+                                <p class="mb-1">신청 정보가 이메일로 발송되었습니다.</p>
+                                <p>관리자 승인 후 PDF 파일이 이메일로 발송될 예정입니다. (보통 1~2일 소요)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button id="back-to-certificate" class="px-6 py-3 bg-primary text-white font-medium rounded-button flex items-center justify-center whitespace-nowrap">
+                            <i class="ri-arrow-left-line mr-2"></i>
+                            돌아가기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-3">
+                            <i class="ri-parking-line text-primary ri-lg"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">모두의주차장</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">모두의주차장은 전국의 주차장을 쉽고 편리하게 이용할 수 있는 서비스를 제공합니다.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <div class="w-8 h-8 flex items-center justify-center">
+                                <i class="ri-instagram-line"></i>
+                            </div>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <div class="w-8 h-8 flex items-center justify-center">
+                                <i class="ri-facebook-circle-line"></i>
+                            </div>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <div class="w-8 h-8 flex items-center justify-center">
+                                <i class="ri-youtube-line"></i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">고객센터</h3>
+                    <div class="space-y-2">
+                        <p class="flex items-center">
+                            <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                <i class="ri-customer-service-2-line"></i>
+                            </div>
+                            <span>1544-0000</span>
+                        </p>
+                        <p class="flex items-center">
+                            <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <span>평일 09:00 - 18:00</span>
+                        </p>
+                        <p class="flex items-center">
+                            <div class="w-6 h-6 flex items-center justify-center mr-2">
+                                <i class="ri-mail-line"></i>
+                            </div>
+                            <span>support@modooparking.com</span>
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">바로가기</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">이용약관</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">개인정보처리방침</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">자주 묻는 질문</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">제휴 문의</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400 text-sm">
+                <p>© 2025 모두의주차장. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script id="tab-navigation">
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    
+                    // 모든 탭 버튼 비활성화
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('text-primary', 'border-primary');
+                        btn.classList.add('text-gray-500', 'border-transparent');
+                    });
+                    
+                    // 클릭한 탭 버튼 활성화
+                    button.classList.remove('text-gray-500', 'border-transparent');
+                    button.classList.add('text-primary', 'border-primary');
+                    
+                    // 모든 탭 콘텐츠 숨기기
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // 선택한 탭 콘텐츠 표시
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+
+    <script id="hourly-reservation">
+        document.addEventListener('DOMContentLoaded', function() {
+            const timeSlotsContainer = document.getElementById('time-slots-container');
+            const reservationSummary = document.getElementById('reservation-summary');
+            const reservationComplete = document.getElementById('reservation-complete');
+            const completeReservation = document.getElementById('complete-reservation');
+            const cancelReservation = document.getElementById('cancel-reservation');
+            const newReservation = document.getElementById('new-reservation');
+            const sendAgain = document.getElementById('send-again');
+            
+            // 예약 가능한 시간대 생성 (오전 8시부터 오후 10시까지, 30분 단위)
+            const generateTimeSlots = () => {
+                timeSlotsContainer.innerHTML = '';
+                
+                // 현재 날짜 가져오기
+                const today = new Date();
+                const selectedDate = document.getElementById('reservation-date').value;
+                const isToday = selectedDate === today.toISOString().split('T')[0];
+                
+                // 현재 시간 (시간과 분)
+                const currentHour = today.getHours();
+                const currentMinute = today.getMinutes();
+                
+                // 임의의 예약 상태 생성 (실제로는 서버에서 가져와야 함)
+                const getRandomAvailability = () => {
+                    const random = Math.random();
+                    if (random < 0.2) return 'disabled';
+                    return 'available';
+                };
+                
+                for (let hour = 8; hour <= 22; hour++) {
+                    for (let minute of [0, 30]) {
+                        // 오늘이고 현재 시간보다 이전이면 예약 불가
+                        const isDisabled = isToday && (hour < currentHour || (hour === currentHour && minute <= currentMinute));
+                        
+                        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                        const row = document.createElement('div');
+                        row.className = 'grid grid-cols-4 py-2 hover:bg-gray-50';
+                        
+                        // 시간 열
+                        const timeCell = document.createElement('div');
+                        timeCell.className = 'px-4 flex items-center justify-center';
+                        timeCell.textContent = timeString;
+                        row.appendChild(timeCell);
+                        
+                        // 3개의 주차면에 대한 버튼 생성
+                        for (let spot = 1; spot <= 3; spot++) {
+                            const spotCell = document.createElement('div');
+                            spotCell.className = 'px-2 flex items-center justify-center';
+                            
+                            const availability = isDisabled ? 'disabled' : getRandomAvailability();
+                            
+                            const button = document.createElement('button');
+                            button.className = `time-slot w-full py-2 px-3 rounded-lg text-sm font-medium ${
+                                availability === 'disabled' ? 'bg-gray-200 text-gray-500 disabled' : 'bg-green-100 text-green-800 hover:bg-green-200'
+                            }`;
+                            button.textContent = availability === 'disabled' ? '예약불가' : '예약가능';
+                            button.disabled = availability === 'disabled';
+                            
+                            if (availability !== 'disabled') {
+                                button.addEventListener('click', () => {
+                                    // 모든 버튼 초기화
+                                    document.querySelectorAll('.time-slot').forEach(btn => {
+                                        if (!btn.classList.contains('disabled')) {
+                                            btn.classList.remove('bg-primary/20', 'text-primary', 'border-primary/30');
+                                            btn.classList.add('bg-green-100', 'text-green-800', 'hover:bg-green-200');
+                                            btn.textContent = '예약가능';
+                                        }
+                                    });
+                                    
+                                    // 선택한 버튼 스타일 변경
+                                    button.classList.remove('bg-green-100', 'text-green-800', 'hover:bg-green-200');
+                                    button.classList.add('bg-primary/20', 'text-primary', 'border', 'border-primary/30');
+                                    button.textContent = '선택됨';
+                                    
+                                    // 예약 정보 표시
+                                    const endTime = new Date(`2025-01-01T${hour}:${minute}`);
+                                    endTime.setMinutes(endTime.getMinutes() + 60); // 1시간 추가
+                                    const endTimeString = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+                                    
+                                    document.getElementById('summary-datetime').textContent = `${selectedDate} ${timeString} ~ ${endTimeString}`;
+                                    document.getElementById('summary-spot').textContent = `301-${spot}`;
+                                    document.getElementById('summary-fee').textContent = '4,000원';
+                                    
+                                    // 예약 정보 섹션 표시
+                                    reservationSummary.classList.remove('hidden');
+                                    
+                                    // 스크롤 이동
+                                    reservationSummary.scrollIntoView({ behavior: 'smooth' });
+                                });
+                            }
+                            
+                            spotCell.appendChild(button);
+                            row.appendChild(spotCell);
+                        }
+                        
+                        timeSlotsContainer.appendChild(row);
+                    }
+                }
+            };
+            
+            // 초기 시간대 생성
+            generateTimeSlots();
+            
+            // 날짜 변경 시 시간대 다시 생성
+            document.getElementById('reservation-date').addEventListener('change', generateTimeSlots);
+            
+            // 예약 완료 버튼 클릭 시
+            completeReservation.addEventListener('click', () => {
+                // 입력값 검증
+                const name = document.getElementById('reservation-name').value;
+                const phone = document.getElementById('reservation-phone').value;
+                const carNumber = document.getElementById('reservation-car-number').value;
+                const termsCheck = document.getElementById('terms-check').checked;
+                
+                if (!name || !phone || !carNumber) {
+                    alert('모든 정보를 입력해 주세요.');
+                    return;
+                }
+                
+                if (!termsCheck) {
+                    alert('이용약관 및 개인정보 처리방침에 동의해 주세요.');
+                    return;
+                }
+                
+                // 예약 완료 정보 설정
+                document.getElementById('complete-datetime').textContent = document.getElementById('summary-datetime').textContent;
+                document.getElementById('complete-spot').textContent = document.getElementById('summary-spot').textContent;
+                document.getElementById('complete-car-number').textContent = carNumber;
+                document.getElementById('complete-fee').textContent = document.getElementById('summary-fee').textContent;
+                
+                // 선택된 결제 방법 가져오기
+                const paymentMethods = document.getElementsByName('payment-method');
+                let selectedPayment = '';
+                for (const method of paymentMethods) {
+                    if (method.checked) {
+                        selectedPayment = method.parentElement.querySelector('span:last-child').textContent;
+                        break;
+                    }
+                }
+                document.getElementById('complete-payment').textContent = selectedPayment;
+                
+                // 예약 정보 숨기고 완료 화면 표시
+                reservationSummary.classList.add('hidden');
+                reservationComplete.classList.remove('hidden');
+                
+                // 스크롤 이동
+                reservationComplete.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 예약 취소 버튼 클릭 시
+            cancelReservation.addEventListener('click', () => {
+                // 모든 버튼 초기화
+                document.querySelectorAll('.time-slot').forEach(btn => {
+                    if (!btn.classList.contains('disabled')) {
+                        btn.classList.remove('bg-primary/20', 'text-primary', 'border-primary/30');
+                        btn.classList.add('bg-green-100', 'text-green-800', 'hover:bg-green-200');
+                        btn.textContent = '예약가능';
+                    }
+                });
+                
+                // 입력 필드 초기화
+                document.getElementById('reservation-name').value = '';
+                document.getElementById('reservation-phone').value = '';
+                document.getElementById('reservation-car-number').value = '';
+                document.getElementById('terms-check').checked = false;
+                
+                // 예약 정보 섹션 숨기기
+                reservationSummary.classList.add('hidden');
+            });
+            
+            // 새 예약하기 버튼 클릭 시
+            newReservation.addEventListener('click', () => {
+                // 모든 버튼 초기화
+                document.querySelectorAll('.time-slot').forEach(btn => {
+                    if (!btn.classList.contains('disabled')) {
+                        btn.classList.remove('bg-primary/20', 'text-primary', 'border-primary/30');
+                        btn.classList.add('bg-green-100', 'text-green-800', 'hover:bg-green-200');
+                        btn.textContent = '예약가능';
+                    }
+                });
+                
+                // 입력 필드 초기화
+                document.getElementById('reservation-name').value = '';
+                document.getElementById('reservation-phone').value = '';
+                document.getElementById('reservation-car-number').value = '';
+                document.getElementById('terms-check').checked = false;
+                
+                // 예약 완료 화면 숨기기
+                reservationComplete.classList.add('hidden');
+                
+                // 시간대 목록으로 스크롤
+                document.getElementById('hourly').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 정보 다시 받기 버튼 클릭 시
+            sendAgain.addEventListener('click', () => {
+                alert('예약 정보가 이메일과 문자로 다시 발송되었습니다.');
+            });
+        });
+    </script>
+    <script id="monthly-application">
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitMonthly = document.getElementById('submit-monthly');
+            const monthlyComplete = document.getElementById('monthly-complete');
+            const backToMonthly = document.getElementById('back-to-monthly');
+            
+            // 정기권 신청 제출 버튼 클릭 시
+            submitMonthly.addEventListener('click', () => {
+                // 입력값 검증
+                const name = document.getElementById('monthly-name').value;
+                const phone = document.getElementById('monthly-phone').value;
+                const email = document.getElementById('monthly-email').value;
+                const carNumber = document.getElementById('monthly-car-number').value;
+                const startDate = document.getElementById('monthly-start-date').value;
+                const endDate = document.getElementById('monthly-end-date').value;
+                const termsCheck = document.getElementById('monthly-terms-check').checked;
+                
+                if (!name || !phone || !email || !carNumber || !startDate || !endDate) {
+                    alert('모든 정보를 입력해 주세요.');
+                    return;
+                }
+                
+                if (!termsCheck) {
+                    alert('이용약관 및 개인정보 처리방침에 동의해 주세요.');
+                    return;
+                }
+                
+                // 완료 화면에 정보 설정
+                document.getElementById('complete-monthly-name').textContent = name;
+                document.getElementById('complete-monthly-car').textContent = carNumber;
+                
+                // 신청 정보 숨기고 완료 화면 표시
+                document.getElementById('monthly').querySelector('.bg-white').classList.add('hidden');
+                monthlyComplete.classList.remove('hidden');
+                
+                // 스크롤 이동
+                monthlyComplete.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 돌아가기 버튼 클릭 시
+            backToMonthly.addEventListener('click', () => {
+                // 입력 필드 초기화
+                document.getElementById('monthly-name').value = '';
+                document.getElementById('monthly-phone').value = '';
+                document.getElementById('monthly-email').value = '';
+                document.getElementById('monthly-car-number').value = '';
+                document.getElementById('monthly-request').value = '';
+                document.getElementById('monthly-terms-check').checked = false;
+                
+                // 완료 화면 숨기고 신청 정보 표시
+                monthlyComplete.classList.add('hidden');
+                document.getElementById('monthly').querySelector('.bg-white').classList.remove('hidden');
+                
+                // 탭으로 스크롤
+                document.getElementById('monthly').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+    <script id="certificate-application">
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitCertificate = document.getElementById('submit-certificate');
+            const certificateComplete = document.getElementById('certificate-complete');
+            const backToCertificate = document.getElementById('back-to-certificate');
+            
+            // 커스텀 셀렉트 박스 초기화
+            const customSelects = document.getElementsByClassName('custom-select');
+            for (let i = 0; i < customSelects.length; i++) {
+                const selectSelected = customSelects[i].getElementsByClassName('select-selected')[0];
+                selectSelected.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeAllSelect(this);
+                    this.nextSibling.classList.toggle('select-hide');
+                    this.classList.toggle('select-arrow-active');
+                });
+                
+                const selectItems = customSelects[i].getElementsByClassName('select-items')[0];
+                const selectOptions = selectItems.getElementsByTagName('div');
+                for (let j = 0; j < selectOptions.length; j++) {
+                    selectOptions[j].addEventListener('click', function() {
+                        const selectSelected = this.parentNode.previousSibling;
+                        selectSelected.textContent = this.textContent;
+                        
+                        // 선택된 항목 스타일 변경
+                        const sameAsSelected = this.parentNode.getElementsByClassName('same-as-selected');
+                        for (let k = 0; k < sameAsSelected.length; k++) {
+                            sameAsSelected[k].classList.remove('same-as-selected');
+                        }
+                        this.classList.add('same-as-selected');
+                        
+                        // 드롭다운 닫기
+                        selectSelected.click();
+                    });
+                }
+            }
+            
+            // 다른 곳 클릭 시 모든 셀렉트 박스 닫기
+            document.addEventListener('click', closeAllSelect);
+            
+            function closeAllSelect(elmnt) {
+                const selectItems = document.getElementsByClassName('select-items');
+                const selectSelected = document.getElementsByClassName('select-selected');
+                const arrNo = [];
+                
+                for (let i = 0; i < selectSelected.length; i++) {
+                    if (elmnt == selectSelected[i]) {
+                        arrNo.push(i);
+                    } else {
+                        selectSelected[i].classList.remove('select-arrow-active');
+                    }
+                }
+                
+                for (let i = 0; i < selectItems.length; i++) {
+                    if (arrNo.indexOf(i)) {
+                        selectItems[i].classList.add('select-hide');
+                    }
+                }
+            }
+            
+            // 증명서 신청 제출 버튼 클릭 시
+            submitCertificate.addEventListener('click', () => {
+                // 입력값 검증
+                const purpose = document.querySelector('.select-selected').textContent;
+                const name = document.getElementById('cert-name').value;
+                const phone = document.getElementById('cert-phone').value;
+                const idNumber = document.getElementById('cert-id-number').value;
+                const carNumber = document.getElementById('cert-car-number').value;
+                const zipcode = document.getElementById('cert-address-zipcode').value;
+                const address1 = document.getElementById('cert-address-1').value;
+                const email = document.getElementById('cert-email').value;
+                const termsCheck = document.getElementById('cert-terms-check').checked;
+                
+                if (purpose === '용도를 선택해 주세요' || !name || !phone || !idNumber || !carNumber || !zipcode || !address1 || !email) {
+                    alert('모든 정보를 입력해 주세요.');
+                    return;
+                }
+                
+                if (!termsCheck) {
+                    alert('이용약관 및 개인정보 처리방침에 동의해 주세요.');
+                    return;
+                }
+                
+                // 완료 화면에 정보 설정
+                document.getElementById('complete-cert-purpose').textContent = purpose;
+                document.getElementById('complete-cert-name').textContent = name;
+                document.getElementById('complete-cert-car').textContent = carNumber;
+                
+                // 신청 정보 숨기고 완료 화면 표시
+                document.getElementById('certificate').querySelector('.bg-white').classList.add('hidden');
+                certificateComplete.classList.remove('hidden');
+                
+                // 스크롤 이동
+                certificateComplete.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 돌아가기 버튼 클릭 시
+            backToCertificate.addEventListener('click', () => {
+                // 입력 필드 초기화
+                document.querySelector('.select-selected').textContent = '용도를 선택해 주세요';
+                document.getElementById('cert-name').value = '';
+                document.getElementById('cert-phone').value = '';
+                document.getElementById('cert-id-number').value = '';
+                document.getElementById('cert-car-number').value = '';
+                document.getElementById('cert-address-zipcode').value = '';
+                document.getElementById('cert-address-1').value = '';
+                document.getElementById('cert-address-2').value = '';
+                document.getElementById('cert-email').value = '';
+                document.getElementById('cert-terms-check').checked = false;
+                
+                // 완료 화면 숨기고 신청 정보 표시
+                certificateComplete.classList.add('hidden');
+                document.getElementById('certificate').querySelector('.bg-white').classList.remove('hidden');
+                
+                // 탭으로 스크롤
+                document.getElementById('certificate').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
